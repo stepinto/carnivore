@@ -1,0 +1,219 @@
+package org.stepinto.carnivore.parser;
+
+import java_cup.runtime.*;
+import java.io.*;
+import org.stepinto.carnivore.common.*;
+
+parser code {:
+	ErrorManager errorMgr;
+	Exp syntaxTree;
+
+	public Parser(Scanner s, ErrorManager e) {
+		this(s);
+		errorMgr = e;
+	}
+
+	public Exp getSyntaxTree() {
+		return syntaxTree; 
+	}
+:}
+
+action code {:
+	private void error(int line, String msg) {
+		parser.errorMgr.report(line, msg);
+	}
+
+	private ArrayInitExp buildArrayInitExp(Exp postfix, Exp init) {
+		if (postfix instanceof ArrayAccessExp) {
+			ArrayAccessExp aa = (ArrayAccessExp)postfix;
+			if (aa.getId() instanceof IdExp) {
+				String typeName = ((IdExp)aa.getId()).getId();
+				return new ArrayInitExp(postfix.getLineNo(), typeName, aa.getIndexExp(), init);
+			}
+			else
+				error(postfix.getLineNo(), "Expect array type name and index");
+		}
+		else
+			error(postfix.getLineNo(), "Expect array type name and index.");
+		return null;
+	}
+:}
+
+
+terminal String ID, STRING_LITERAL;
+terminal Integer INT_LITERAL;
+terminal COMMA, COLON, SEMICOLON, LPAREN, RPAREN, LBRACK, RBRACK, LBRACE,
+	 RBRACE, DOT, PLUS, MINUS, TIMES, DIVIDE, EQ, NEQ, LT, LE, GT, GE, AND,
+	 OR, ASSIGN, ARRAY, IF, THEN, ELSE, WHILE, FOR, TO, DO, LET, IN,
+	 END, OF, BREAK, NIL, FUNCTION, VAR, TYPE;
+non terminal Exp compexp, assexp, simpexp, orexp, andexp, relexp, 
+    addexp, mulexp, unaryexp, pfxexp, prmyexp, compexps_opt,
+    letexp, forexp, whlexp, ifexp, ifelexp, dynexp, compexps, program;
+non terminal FieldInitExp fldinit;
+non terminal FieldInitExpList fldinits, fldinits_opt;
+non terminal Decl fundec, tydec, vardec, dec;
+non terminal DeclList decs, decs_opt;
+non terminal TypeFieldList tyflds, tyflds_opt;
+non terminal FuncCallArgList fcargs, fcargs_opt;
+non terminal empty;
+
+start with program;
+
+/* Expression */
+program
+    ::= compexp:c {: parser.syntaxTree = c; :}
+      ; compexps
+    ::= compexps:l SEMICOLON compexp:c {: RESULT = new CompExpList(l.getLineNo(), (CompExpList)l, c); :}
+      | compexp:c {: RESULT = new CompExpList(c.getLineNo(), c); :}
+      ;
+compexp
+    ::= letexp:e {: RESULT = e; :}
+      | forexp:e {: RESULT = e; :}
+      | whlexp:e {: RESULT = e; :}
+      | ifexp:e {: RESULT = e; :}
+      | ifelexp:e {: RESULT = e; :}
+      | assexp:e {: RESULT = e; :}
+      | BREAK:br {: RESULT = new BreakExp(brleft); :}
+      ;
+assexp
+   ::= unaryexp:l ASSIGN simpexp:r {: RESULT = new AssignExp(l.getLineNo(), l, r); :}
+     | simpexp:e {: RESULT = e; :}
+     ;
+simpexp
+   ::= dynexp:e {: RESULT = e; :}
+     ;
+dynexp
+   ::= /*ID LBRACK simpexp RBRACK*/ pfxexp:p OF simpexp:s {: RESULT = buildArrayInitExp(p, s); :}
+     | ID:id LBRACE fldinits_opt:inits RBRACE {: RESULT = new RecordInitExp(idleft, id, inits); :}
+     | orexp:e {: RESULT = e; :}
+     ;
+fldinits
+   ::= fldinit:e {: RESULT = new FieldInitExpList(e.getLineNo(), e); :}
+     | fldinits:l COMMA fldinit:e {: RESULT = new FieldInitExpList(l.getLineNo(), l, e); :}
+     ;
+fldinit
+   ::= ID:id EQ simpexp:e {: RESULT = new FieldInitExp(idleft, id, e); :}
+     ;
+orexp
+   ::= orexp:l OR andexp:r {: RESULT = new IfExp(l.getLineNo(), l, new IntExp(l.getLineNo(), 1), r); :}
+     | andexp:e {: RESULT = e; :}
+     ;
+andexp
+   ::= andexp:l AND relexp:r {: RESULT = new IfExp(l.getLineNo(), l, r, new IntExp(l.getLineNo(), 0)); :} 
+     | relexp:e {: RESULT = e; :}
+     | addexp:e {: RESULT = e; :}
+     ;
+relexp
+   ::= addexp:l LT addexp:r {: RESULT = new OpExp(l.getLineNo(), l, OpExp.LT, r); :}
+     | addexp:l LE addexp:r {: RESULT = new OpExp(l.getLineNo(), l, OpExp.LE, r); :}
+     | addexp:l EQ addexp:r {: RESULT = new OpExp(l.getLineNo(), l, OpExp.EQ, r);:}
+     | addexp:l NEQ addexp:r {: RESULT = new OpExp(l.getLineNo(), l, OpExp.NEQ, r); :}
+     | addexp:l GT addexp:r {: RESULT = new OpExp(l.getLineNo(), l, OpExp.GT, r); :}
+     | addexp:l GE addexp:r {: RESULT = new OpExp(l.getLineNo(), l, OpExp.GE, r); :}
+     ;
+addexp
+   ::= addexp:l PLUS mulexp:r {: RESULT = new OpExp(l.getLineNo(), l, OpExp.PLUS, r); :}
+     | addexp:l MINUS mulexp:r {: RESULT = new OpExp(l.getLineNo(), l, OpExp.MINUS, r); :}
+     | mulexp:e {: RESULT = e; :}
+     ;
+mulexp
+   ::= mulexp:l TIMES unaryexp:r {: RESULT = new OpExp(l.getLineNo(), l, OpExp.TIMES, r); :}
+     | mulexp:l DIVIDE unaryexp:r {: RESULT = new OpExp(l.getLineNo(), l, OpExp.DIVIDE, r); :}
+     | unaryexp:e {: RESULT = e; :}
+     ;
+unaryexp
+   ::= MINUS:u pfxexp:e {: RESULT = new OpExp(uleft, new IntExp(uleft, 0), OpExp.MINUS, e); :}
+     | pfxexp:e {: RESULT = e; :}
+     ;
+pfxexp
+   ::= pfxexp:e DOT ID:id {: RESULT = new RecordAccessExp(e.getLineNo(), e, id); :}
+     | pfxexp:e LBRACK simpexp:idx RBRACK {: RESULT = new ArrayAccessExp(e.getLineNo(), e, idx); :}
+     | pfxexp:e LPAREN fcargs_opt:arg RPAREN {: RESULT = new FuncCallExp(e.getLineNo(), e, arg); :}
+     | prmyexp:e {: RESULT = e; :}
+     ;
+prmyexp
+   ::= INT_LITERAL:i {: RESULT = new IntExp(ileft, i); :}
+     | STRING_LITERAL:s {: RESULT = new StringExp(sleft, s); :}
+     | NIL:n {: RESULT = new NilExp(nleft); :}
+     | ID:id {: RESULT = new IdExp(idleft, id); :}
+     | LPAREN compexps_opt:e RPAREN {: RESULT = e; :}
+     ;
+fcargs
+   ::= fcargs:l COMMA compexp:e {: RESULT = new FuncCallArgList(l.getLineNo(), l, e); :}
+     | compexp:e {: RESULT = new FuncCallArgList(e.getLineNo(), e); :}
+     ;
+
+compexps_opt
+   ::= empty {: RESULT = new CompExpList(0); :}
+     | compexps:l {: RESULT = l; :}
+     ;
+fcargs_opt
+   ::= empty {: RESULT = new FuncCallArgList(0); :}
+     | fcargs:l {: RESULT = l; :}
+     ;
+fldinits_opt
+   ::= empty {: RESULT = new FieldInitExpList(0); :}
+     | fldinits:l {: RESULT = l; :}
+     ;
+
+/* Control-Flow */
+letexp
+   ::= LET:l decs_opt:d IN compexps_opt:c END {: RESULT = new LetExp(lleft, d, c); :}
+     ;
+forexp
+   ::= FOR:f ID:id ASSIGN simpexp:from TO simpexp:to DO compexp:body {: RESULT = new ForExp(fleft, id, from, to, body); :}
+     ;
+whlexp
+   ::= WHILE:w simpexp:condi DO compexp:body {: RESULT = new WhileExp(wleft, condi, body); :}
+     ;
+ifexp
+   ::= IF:i simpexp:c THEN compexp:t {: RESULT = new IfExp(ileft, c, t, new CompExpList(0)); :}
+     ;
+ifelexp
+   ::= IF:i simpexp:c THEN compexp:t ELSE compexp:e {: RESULT = new IfExp(ileft, c, t, e); :}
+     ;
+
+/* Function Declaration */
+fundec
+   ::= FUNCTION ID:id LPAREN tyflds_opt:args RPAREN COLON ID:ret EQ compexp:body {: RESULT = new FuncDecl(idleft, id, args, ret, body); :}
+     | FUNCTION ID:id LPAREN tyflds_opt:args RPAREN EQ compexp:body {: RESULT = new FuncDecl(idleft, id, args, null, body); :}
+     ;
+
+/* Type Declartaion */
+tydec
+   ::= TYPE ID:id EQ ID:org {: RESULT = new TypeAliasDecl(idleft, id, org); :}
+     | TYPE ID:id EQ ARRAY OF ID:elemId {: RESULT = new ArrayDecl(idleft, id, elemId); :}
+     | TYPE ID:id EQ LBRACE tyflds_opt:fields RBRACE {: RESULT = new RecordDecl(idleft, id, fields); :}
+     ;
+tyflds 
+   ::= tyflds:list COMMA ID:id COLON ID:typeId {: RESULT = new TypeFieldList(list.getLineNo(), list, new TypeField(idleft, id, typeId)); :}
+     | ID:id COLON ID:typeId {: RESULT = new TypeFieldList(idleft, new TypeField(idleft, id, typeId)); :}
+     ;
+tyflds_opt
+   ::= empty {: RESULT = new TypeFieldList(0); :}
+     | tyflds:l {: RESULT = l; :}
+     ;
+
+/* Variable Declaration */
+vardec
+   ::= VAR ID:id ASSIGN simpexp:init {: RESULT = new VarDecl(idleft, id, null, init); :}
+     | VAR ID:id COLON ID:type ASSIGN simpexp:init {: RESULT = new VarDecl(idleft, id, type, init); :}
+     ;
+decs
+   ::= decs:l dec:d {: RESULT = new DeclList(l.getLineNo(), l, d); :}
+     | dec:d {: RESULT = new DeclList(d.getLineNo(), d); :}
+     ;
+dec
+   ::= fundec:d {: RESULT = d; :}
+     | tydec:d {: RESULT = d; :}
+     | vardec:d {: RESULT = d; :}
+     ;
+decs_opt
+   ::= empty {: RESULT = new DeclList(0); :}
+     | decs:l {: RESULT = l; :}
+     ;
+
+/* MISC */
+empty ::= ;
+
+
