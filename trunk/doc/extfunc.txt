@@ -1,0 +1,24 @@
+This is a list of external functions supported by Carnivore.
+
+// string init
+function getstr(i: int): string;
+function putstr(s: string);
+
+// array/record init
+function malloc(n: int): address
+
+// standard i/o
+function print(s: string);
+function printi(i: int);
+function flush();
+function getchar(): string;
+
+// string operations
+function ord(s: string): int;
+function chr(i: int): string;
+function size(s: string): string;
+function substring(s: string, f: int, n: int): string;
+function concat(s1: string, s2: string): string;
+function not(i: int): int;
+function exit(i: int);;
+
