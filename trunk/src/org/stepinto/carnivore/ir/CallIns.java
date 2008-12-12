@@ -22,6 +22,14 @@ public class CallIns extends Ins {
 			return getLineNo() + "\t" + left + " := call " + target;
 	}
 
+	public String getLeft() {
+		return left;
+	}
+
+	public String getTarget() {
+		return target;
+	}
+
 	private String target; 
 	private String left;
 }

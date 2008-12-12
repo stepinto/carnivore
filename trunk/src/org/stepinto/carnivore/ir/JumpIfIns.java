@@ -11,6 +11,8 @@ public class JumpIfIns extends Ins {
 
 	public JumpIfIns(int lineNo, int relOp, String operand1, String operand2, int target) {
 		super(lineNo);
+		assert(operand1 != null);
+		assert(operand2 != null);
 		this.relOp = relOp;
 		this.operand1 = operand1;
 		this.operand2 = operand2;
@@ -33,6 +35,22 @@ public class JumpIfIns extends Ins {
 	public String toString() {
 		return getLineNo() + "\tif " + operand1 + " " + getOpString() + " "
 	       		+ operand2 + " jump " + target;
+	}
+
+	public int getTarget() {
+		return target;
+	}
+
+	public int getRelOp() {
+		return relOp;
+	}
+
+	public String getLeft() {
+		return operand1;
+	}
+
+	public String getRight() {
+		return operand2;
 	}
 
 	private int relOp;

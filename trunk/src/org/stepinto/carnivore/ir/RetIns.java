@@ -14,6 +14,10 @@ public class RetIns extends Ins {
 		return getLineNo() + "\tret" + (var == null ? "" : " " + var);
 	}
 
+	public String getVar() {
+		return var;
+	}
+
 	private String var;
 }
 

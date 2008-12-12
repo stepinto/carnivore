@@ -102,3 +102,8 @@ void *_mkstr(const char *s) {
 	return t;
 }
 
+// void *_malloc(int size)
+void *_malloc(int size) {
+	return malloc(size);
+}
+

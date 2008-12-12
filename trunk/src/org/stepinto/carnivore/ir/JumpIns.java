@@ -10,6 +10,10 @@ public class JumpIns extends Ins {
 		return getLineNo() + "\tjump " + target;
 	}
 
+	public int getTarget() {
+		return target;
+	}
+
 	private int target;
 }
 

@@ -12,10 +12,10 @@ import org.stepinto.carnivore.arch.*;
 public class Translator {
 	public static final String FRAME_POINTER_NAME = "frame_ptr";
 	public static final String STATIC_LINK_VAR_NAME = "static_link";
-	private static final String USER_VAR_PREFIX = "v";
-	private static final String TEMP_VAR_PREFIX = "t";
-	private static final String USER_FUNC_PREFIX = "F";
-	private static final String STRING_CONST_PREFIX = "S";
+	public static final String USER_VAR_PREFIX = "v";
+	public static final String TEMP_VAR_PREFIX = "t";
+	public static final String USER_FUNC_PREFIX = "F";
+	public static final String STRING_CONST_PREFIX = "s";
 
 	public Translator(/*SyntaxTree syntaxTree,*/ Map<Exp, Type> expTypes, 
 			Map<SyntaxTree, Identifier> declIds, Map<IdExp, Identifier> expIds,
@@ -201,6 +201,7 @@ public class Translator {
 			putExpVar(exp, userVarName(var));
 		else {
 			String staticLink = userVarName(frame.getStaticLink());
+			String ret = newTempVar(frame);
 			while (frame != null && !frame.contains(var)) {
 				String tmp = newTempVar(frame);
 				ibuf.writeMemReadIns(tmp, staticLink,
@@ -209,7 +210,6 @@ public class Translator {
 				frame = frame.getParent();
 			}
 
-			String ret = newTempVar(frame);
 			ibuf.writeMemReadIns(ret, staticLink, String.valueOf(frame.getOffset(var)));
 			putExpVar(exp, ret);
 		}
@@ -360,7 +360,7 @@ public class Translator {
 
 	private String userFuncName(Function func) {
 		if (RuntimeFunctions.isRuntimeFunc(func))
-			return func.getName();
+			return "_" + func.getName();
 		else
 			return USER_FUNC_PREFIX + func.getUid();
 	}
@@ -472,13 +472,13 @@ public class Translator {
 
 		Exp thenBody = exp.getThenBody();
 		translateExp(ibuf, thenBody, frame);
-		ibuf.writeAssignIns(ret, getExpVar(thenBody));
+		ibuf.writeAssignIns(ret, getExpVar(thenBody) == null ? "0" : getExpVar(thenBody));
 		ibuf.writeFakeJumpIns(l2);
 
 		Exp elseBody = exp.getElseBody();
 		ibuf.patchFakeJump(l1, ibuf.getCurrLineNo());
 		translateExp(ibuf, elseBody, frame);
-		ibuf.writeAssignIns(ret, getExpVar(elseBody));
+		ibuf.writeAssignIns(ret, getExpVar(elseBody) == null ? "0" : getExpVar(elseBody));
 
 		ibuf.patchFakeJump(l2, ibuf.getCurrLineNo());
 		ibuf.writeNopIns();
@@ -591,11 +591,11 @@ public class Translator {
 
 			// print arg-list
 			if (frame.getStaticLink() != null)
-				out.println("arg: " + frame.getStaticLink().getName());
+				out.println("arg: " + userVarName(frame.getStaticLink()) + "  (static-link)");
 			for (Variable var: frame.getParams())
-				out.println("arg: " + var.getName());
+				out.println("arg: " + userVarName(var) + "  (alias: " + var.getName() + ")");
 			for (Variable var: frame.getLocals())
-				out.println("var: " + var.getName());
+				out.println("var: " + userVarName(var) + "  (alias: " + var.getName() + ")");
 
 			ibuf.dump(out);
 		}
@@ -605,7 +605,7 @@ public class Translator {
 		String name = TEMP_VAR_PREFIX + (++maxTempVarId);
 		Variable var = new Variable(name, IntType.getInstance(), null, true, frame);
 		frame.addLocal(var);
-		return name;
+		return userVarName(var);
 	}
 
 	private String getExpVar(Exp exp) {
@@ -676,6 +676,14 @@ public class Translator {
 
 	private String getBreakToLabel(String label) {
 		return breakToLabel;
+	}
+
+	public List<String> getStringTable() {
+		return strs;
+	}
+
+	public Map<Function, InsBuffer> getFuncIns() {
+		return funcIns;
 	}
 
 	private int maxLabelId = 0;
