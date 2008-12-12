@@ -85,10 +85,6 @@ public class X86Generator extends Generator {
 		}
 		for (Ins ins: ibuf.getIns())
 			generateIns(ins, frame);
-
-		// generate leaving code
-		out.println("\tadd\tesp, " + localStackSize);
-		out.println("\tret");
 	}
 
 	private void generateIns(Ins ins, Frame frame) {
@@ -250,7 +246,7 @@ public class X86Generator extends Generator {
 	}
 
 	private void generateRetIns(RetIns ins, Frame frame) {
-		out.println("\tadd\tesp, " + localStackSize);
+		out.println("\tadd\tesp, " + (localStackSize + IntelArch.INT_SIZE));
 		if (ins.getVar() != null)
 			out.println("\tmov\teax, " + getOperand(ins.getVar(), frame));
 		out.println("\tret");
@@ -295,6 +291,8 @@ public class X86Generator extends Generator {
 			return name;
 		else if (name.equals(Translator.FRAME_POINTER_NAME))
 			return "ebp";
+		else if (name.startsWith(Translator.STRING_CONST_PREFIX))
+			return name;
 		else {
 			int offset = getVarOffset(name, frame);
 			if (offset < 0)
