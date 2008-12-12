@@ -14,8 +14,9 @@ public class IntelArch extends Arch {
 		return new X86Frame((X86Frame)parent, staticLink);
 	}
 
-	public Generator newGenerator(Map<Function, InsBuffer> funcIns, List<String> strs, PrintStream out) {
-		return new X86Generator(funcIns, strs, out);
+	public Generator newGenerator(Map<Function, InsBuffer> funcIns, List<String> strs, Function entryFunc, 
+			PrintStream out) {
+		return new X86Generator(funcIns, strs, entryFunc, out);
 	}
 
 	public int getIntSize() {

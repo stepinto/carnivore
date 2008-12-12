@@ -40,7 +40,7 @@ public class GenerateAsm {
 				intelArch);
 		tl.translate();
 
-		intelArch.newGenerator(tl.getFuncIns(), tl.getStringTable(), System.out).generate();
+		intelArch.newGenerator(tl.getFuncIns(), tl.getStringTable(), tc.getEntryFunc(), System.out).generate();
 		System.exit(0);
 
 	}
