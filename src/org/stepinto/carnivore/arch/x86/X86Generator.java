@@ -8,10 +8,13 @@ import org.stepinto.carnivore.sematics.*;
 
 public class X86Generator extends Generator {
 	public static final String JUMP_FLAG_PREFIX = "L";
+	public static final String ENTRY_FUNC_LABEL = "_tig_start";
 
-	public X86Generator(Map<Function, InsBuffer> funcIns, List<String> strs, PrintStream out) {
+	public X86Generator(Map<Function, InsBuffer> funcIns, List<String> strs, Function entryFunc,
+			PrintStream out) {
 		this.funcIns = funcIns;
 		this.strs = strs;
+		this.entryFunc = entryFunc;
 		this.out = out;
 	}
 
@@ -40,6 +43,7 @@ public class X86Generator extends Generator {
 		out.println("extern\t_exit");
 		out.println("extern\t_mkstr");
 		out.println("extern\t_malloc");
+		out.println("global\t" + ENTRY_FUNC_LABEL);
 	}
 
 	private void generateHeader() {
@@ -69,7 +73,10 @@ public class X86Generator extends Generator {
 
 		// generate push ebp/mov ebp, esp... stuff
 		out.println("; function " + func.getName());
-		out.println(Translator.USER_FUNC_PREFIX + func.getUid() + ":");
+		if (func == entryFunc)
+			out.println(ENTRY_FUNC_LABEL + ":");
+		else
+			out.println(Translator.USER_FUNC_PREFIX + func.getUid() + ":");
 		out.println("\tpush\tebp");
 		out.println("\tmov\tebp, esp");
 		out.println("\tsub\tesp, " + localStackSize);
@@ -304,6 +311,7 @@ public class X86Generator extends Generator {
 
 	private Map<Function, InsBuffer> funcIns;
 	private List<String> strs;
+	private Function entryFunc;
 	private PrintStream out;
 	private int paramCount;
 	private int localStackSize;

@@ -107,3 +107,11 @@ void *_malloc(int size) {
 	return malloc(size);
 }
 
+
+// main
+int main() {
+	extern void _tig_start();
+	_tig_start();
+	_exit(0);
+}
+

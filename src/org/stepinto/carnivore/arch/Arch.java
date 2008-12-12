@@ -10,7 +10,8 @@ public abstract class Arch {
 	abstract public Frame newFrame(Frame parent, Variable staticLink);
 
 	// create a code generator
-	abstract public Generator newGenerator(Map<Function, InsBuffer> funcIns, List<String> strs, PrintStream out);
+	abstract public Generator newGenerator(Map<Function, InsBuffer> funcIns, List<String> strs, Function entryFunc,
+			PrintStream out);
 
 
 
