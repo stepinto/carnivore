@@ -4,7 +4,7 @@
 #include <string.h>
 
 // forward declaration
-static void *_mkstr(const char *);
+void *_mkstr(const char *);
 
 // function print(s: string)
 void _print(void *s) {
@@ -94,7 +94,7 @@ void _exit(int n) {
 }
 
 // helper function
-static void *_mkstr(const char *s) {
+void *_mkstr(const char *s) {
 	int len = strlen(s);
 	void *t = malloc(len + sizeof(int));
 	*(int*)t = len;
