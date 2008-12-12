@@ -1,3 +1,6 @@
+// translator.java
+// by Chao Shi  <charlescpp@gmail.com>
+
 package org.stepinto.carnivore.ir;
 
 import java.io.*;
@@ -12,6 +15,7 @@ public class Translator {
 	private static final String USER_VAR_PREFIX = "v";
 	private static final String TEMP_VAR_PREFIX = "t";
 	private static final String USER_FUNC_PREFIX = "F";
+	private static final String STRING_CONST_PREFIX = "S";
 
 	public Translator(/*SyntaxTree syntaxTree,*/ Map<Exp, Type> expTypes, 
 			Map<SyntaxTree, Identifier> declIds, Map<IdExp, Identifier> expIds,
@@ -53,7 +57,7 @@ public class Translator {
 			else {
 				String staticLink = userVarName(frame.getStaticLink());
 				while (frame != null && !frame.contains(leftVar)) {
-					String tmp = newTempVar();
+					String tmp = newTempVar(frame);
 					int offset = frame.getOffset(frame.getStaticLink());
 					ibuf.writeMemReadIns(tmp, staticLink, String.valueOf(offset));
 					staticLink = tmp;
@@ -72,7 +76,7 @@ public class Translator {
 			int elemSize = getTypeSize(getExpType(leftExp));
 			String base = getExpVar(idExp);
 			String index = getExpVar(indexExp);
-			String tmp = newTempVar();
+			String tmp = newTempVar(frame);
 			ibuf.writeArthIns(ArthIns.TIMES, tmp, index, String.valueOf(elemSize));
 			ibuf.writeMemWriteIns(base, tmp, tempVar);
 		}
@@ -105,19 +109,10 @@ public class Translator {
 		InsBuffer ibuf = new InsBuffer();
 		funcIns.put(func, ibuf);
 
-		// if this function is not a runtime function or main()
-		// the parameter at the top of the stack should be the
-		// pointer of the parent frame
-		if (frame.getStaticLink() != null)
-			ibuf.writeVarDeclIns(userVarName(frame.getStaticLink()), false);
-
-		for (Variable var: frame.getParams())
-			ibuf.writeVarDeclIns(userVarName(var), false); // decl param var
-		for (Variable var: frame.getLocals())
-			ibuf.writeVarDeclIns(userVarName(var), true);  // decl local var
-
 		// tranlsate init-exps
-		for (Variable var: frame.getLocals()) {
+		// we will add temp-var to frame. so to avoid concurrent modification exception
+		// we have to duplicate the list before start iterations
+		for (Variable var: new ArrayList<Variable>(frame.getLocals())) {
 			Exp initExp = var.getInitExp();
 			translateExp(ibuf, initExp, frame);
 			ibuf.writeAssignIns(userVarName(var), getExpVar(initExp));
@@ -153,7 +148,7 @@ public class Translator {
 
 		String leftVar = getExpVar(leftExp);
 		String rightVar = getExpVar(rightExp);
-		String result = newTempVar();
+		String result = newTempVar(frame);
 		switch (exp.getOp()) {
 		case OpExp.PLUS:
 			ibuf.writeArthIns(ArthIns.PLUS, result, leftVar, rightVar);
@@ -207,14 +202,14 @@ public class Translator {
 		else {
 			String staticLink = userVarName(frame.getStaticLink());
 			while (frame != null && !frame.contains(var)) {
-				String tmp = newTempVar();
+				String tmp = newTempVar(frame);
 				ibuf.writeMemReadIns(tmp, staticLink,
 						String.valueOf(frame.getOffset(frame.getStaticLink())));
 				staticLink = tmp;
 				frame = frame.getParent();
 			}
 
-			String ret = newTempVar();
+			String ret = newTempVar(frame);
 			ibuf.writeMemReadIns(ret, staticLink, String.valueOf(frame.getOffset(var)));
 			putExpVar(exp, ret);
 		}
@@ -228,11 +223,9 @@ public class Translator {
 	private void translateStringExp(InsBuffer ibuf, StringExp exp, Frame frame) {
 		String value = exp.getValue();
 		int strId = getStringId(value);
-		String param = newTempVar();
-		String result = newTempVar();
-		ibuf.writeAssignIns(param, String.valueOf(strId));
-		ibuf.writeParamIns(param);
-		ibuf.writeCallIns(result, "_getstr");
+		String result = newTempVar(frame);
+		ibuf.writeParamIns(STRING_CONST_PREFIX + strId);
+		ibuf.writeCallIns(result, "_mkstr");
 		putExpVar(exp, result);
 	}
 
@@ -258,10 +251,10 @@ public class Translator {
 		String sizeVar = getExpVar(exp.getSizeExp());
 		String initVar = getExpVar(exp.getElemInitExp());
 		int elemSize = getTypeSize(((ArrayType)getExpType(exp)).getElemType());
-		String totalSizeVar = newTempVar();
-		String t0 = newTempVar();
-		String t1 = newTempVar();
-		String result = newTempVar();
+		String totalSizeVar = newTempVar(frame);
+		String t0 = newTempVar(frame);
+		String t1 = newTempVar(frame);
+		String result = newTempVar(frame);
 
 		ibuf.writeArthIns(ArthIns.TIMES, totalSizeVar, String.valueOf(elemSize), sizeVar);
 		ibuf.writeParamIns(totalSizeVar);
@@ -296,10 +289,10 @@ public class Translator {
 		// ret[z_offset] := z0
 		RecordType recType = (RecordType)getExpType(exp);
 		int totalSize = getRecordSize(recType);
-		String totalSizeVar = newTempVar();
+		String totalSizeVar = newTempVar(frame);
 		ibuf.writeAssignIns(totalSizeVar, String.valueOf(totalSize));
 
-		String ret = newTempVar();
+		String ret = newTempVar(frame);
 		ibuf.writeParamIns(totalSizeVar);
 		ibuf.writeCallIns(ret, "_malloc");
 
@@ -328,9 +321,9 @@ public class Translator {
 		int elemSize = getTypeSize(elemType);
 
 		String t0 = getExpVar(idExp);
-		String t1 = newTempVar();
+		String t1 = newTempVar(frame);
 		ibuf.writeArthIns(ArthIns.TIMES, t1, getExpVar(indexExp), String.valueOf(elemSize));
-		String ret = newTempVar();
+		String ret = newTempVar(frame);
 		ibuf.writeMemReadIns(ret, t0, t1);
 		putExpVar(exp, ret);
 	}
@@ -360,7 +353,7 @@ public class Translator {
 		translateExp(ibuf, idExp, frame);
 
 		String t0 = getExpVar(idExp);
-		String ret = newTempVar();
+		String ret = newTempVar(frame);
 		ibuf.writeMemReadIns(ret, t0, String.valueOf(offset));
 		putExpVar(exp, ret);
 	}
@@ -394,9 +387,13 @@ public class Translator {
 		if (!RuntimeFunctions.isRuntimeFunc(func))
 			ibuf.writeParamIns(FRAME_POINTER_NAME);
 
-		String retVar = newTempVar();
-		ibuf.writeCallIns(retVar, userFuncName(func));
-		putExpVar(exp, retVar);
+		if (func.getRetType() == null)  // is a procedure?
+			ibuf.writeCallIns(userFuncName(func));
+		else {
+			String retVar = newTempVar(frame);
+			ibuf.writeCallIns(retVar, userFuncName(func));
+			putExpVar(exp, retVar);
+		}
 
 		// translate callee function if neccessary
 		translateFunc(func);
@@ -427,7 +424,7 @@ public class Translator {
 
 		setBreakToLabel(l2);
 		translateExp(ibuf, exp.getBody(), frame);
-		String t1 = newTempVar();
+		String t1 = newTempVar(frame);
 		ibuf.writeArthIns(ArthIns.PLUS, t1, iVar, "1");
 		ibuf.writeAssignIns(iVar, t1);
 
@@ -469,7 +466,7 @@ public class Translator {
 		Exp condiExp = exp.getCondiExp();
 		String l1 = newLabel();
 		String l2 = newLabel();
-		String ret = newTempVar();
+		String ret = newTempVar(frame);
 		translateExp(ibuf, condiExp, frame);
 		ibuf.writeFakeJumpIfIns(JumpIfIns.EQ, getExpVar(condiExp), "0", l1);
 
@@ -534,7 +531,7 @@ public class Translator {
 
 	private void translateNilExp(InsBuffer ibuf, NilExp exp, Frame frame) {
 		// t0 := 0
-		String t0 = newTempVar();
+		String t0 = newTempVar(frame);
 		ibuf.writeAssignIns(t0, "0");
 		putExpVar(exp, t0);
 	}
@@ -586,14 +583,29 @@ public class Translator {
 		for (Map.Entry<Function, InsBuffer> kv: funcIns.entrySet()) {
 			Function func = kv.getKey();
 			InsBuffer ibuf = kv.getValue();
+			Frame frame = func.getFrame();
+
+			// print function name
 			out.println("---- function " + userFuncName(func) + " (alias: "
 					+ func.getName() + ")----");
+
+			// print arg-list
+			if (frame.getStaticLink() != null)
+				out.println("arg: " + frame.getStaticLink().getName());
+			for (Variable var: frame.getParams())
+				out.println("arg: " + var.getName());
+			for (Variable var: frame.getLocals())
+				out.println("var: " + var.getName());
+
 			ibuf.dump(out);
 		}
 	}
 
-	private String newTempVar() {
-		return TEMP_VAR_PREFIX + (++maxTempVarId);
+	private String newTempVar(Frame frame) {
+		String name = TEMP_VAR_PREFIX + (++maxTempVarId);
+		Variable var = new Variable(name, IntType.getInstance(), null, true, frame);
+		frame.addLocal(var);
+		return name;
 	}
 
 	private String getExpVar(Exp exp) {

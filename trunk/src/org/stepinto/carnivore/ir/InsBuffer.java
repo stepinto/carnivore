@@ -61,10 +61,6 @@ public class InsBuffer {
 		ins.add(new FakeJumpIfIns(getCurrLineNo(), relOp, operand1, operand2, target));
 	}
 
-	public void writeVarDeclIns(String name, boolean local) {
-		ins.add(new VarDeclIns(getCurrLineNo(), name, local));
-	}
-
 	public void writeRetIns() {
 		ins.add(new RetIns(getCurrLineNo()));
 	}
