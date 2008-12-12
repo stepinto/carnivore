@@ -52,6 +52,20 @@ do
 	fi
 done
 
+# build rtl
+echo ">> Building runtime..."
+pushd rtl/x86/linux > /dev/null
+make > log
+if [[ $? -gt 0 ]]
+then
+	echo !! Compile failed.
+	cat log
+	rm -f log
+	exit
+fi
+rm -f log
+popd > /dev/null
+
 # update ctags
 echo ">> Updating tags..."
 ctags -R

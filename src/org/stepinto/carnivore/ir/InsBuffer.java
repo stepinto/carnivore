@@ -101,6 +101,10 @@ public class InsBuffer {
 		return ins.size() + 1;
 	}
 
+	public List<Ins> getIns() {
+		return ins;
+	}
+
 	private List<Ins> ins = new ArrayList<Ins>();
 }
 

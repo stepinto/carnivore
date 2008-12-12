@@ -8,6 +8,9 @@ public class ArthIns extends Ins {
 
 	public ArthIns(int lineNo, int op, String result, String operand1, String operand2) {
 		super(lineNo);
+		assert(result != null);
+		assert(operand1 != null);
+		assert(operand2 != null);
 		this.result = result;
 		this.operand1 = operand1;
 		this.operand2 = operand2;
@@ -27,6 +30,22 @@ public class ArthIns extends Ins {
 	public String toString() {
 		return getLineNo() + "\t" + result + " := " + operand1 + " " + getOpChar()
 			+ " " + operand2;
+	}
+
+	public String getResult() {
+		return result;
+	}
+
+	public String getLeft() { 
+		return operand1;
+	}
+
+	public String getRight() {
+		return operand2;
+	}
+
+	public int getOp() {
+		return op;
 	}
 
 	private int op;
