@@ -29,20 +29,10 @@ public class X86Generator extends Generator {
 	}
 
 	private void generateExternDecls() {
-		out.println("extern\t_mkstr");
-		out.println("extern\t_print");
-		out.println("extern\t_printi");
-		out.println("extern\t_flush");
-		out.println("extern\t_getchar");
-		out.println("extern\t_ord");
-		out.println("extern\t_chr");
-		out.println("extern\t_size");
-		out.println("extern\t_substring");
-		out.println("extern\t_concat");
-		out.println("extern\t_not");
-		out.println("extern\t_exit");
-		out.println("extern\t_mkstr");
 		out.println("extern\t_malloc");
+		out.println("extern\t_mkstr");
+		for (Function func: RuntimeFunctions.getList())
+			out.println("extern\t_" + func.getName());
 		out.println("global\t" + ENTRY_FUNC_LABEL);
 	}
 
@@ -253,9 +243,9 @@ public class X86Generator extends Generator {
 	}
 
 	private void generateRetIns(RetIns ins, Frame frame) {
-		out.println("\tadd\tesp, " + (localStackSize + IntelArch.INT_SIZE));
 		if (ins.getVar() != null)
 			out.println("\tmov\teax, " + getOperand(ins.getVar(), frame));
+		out.println("\tadd\tesp, " + (localStackSize + IntelArch.INT_SIZE));
 		out.println("\tret");
 	}
 

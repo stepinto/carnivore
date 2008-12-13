@@ -53,6 +53,10 @@ public class RuntimeFunctions {
 		Function getchar = new Function("getchar", makeArgList(), stringType, null, null);
 		list.add(getchar);
 
+		// geti
+		Function geti = new Function("geti", makeArgList(), intType, null, null);
+		list.add(geti);
+
 		// ord
 		Function ord = new Function("ord", makeArgList(stringType), intType, null, null);
 		list.add(ord);
