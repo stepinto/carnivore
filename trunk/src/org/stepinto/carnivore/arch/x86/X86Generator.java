@@ -46,8 +46,8 @@ public class X86Generator extends Generator {
 			String label = Translator.STRING_CONST_PREFIX + i;
 			out.print(label + ":\tdb\t");
 			for (int j = 0; j < s.length(); j++)
-				out.print((j == 0 ? "" : ", ") + String.valueOf((int)s.charAt(j)));
-			out.println();
+				out.print(String.valueOf((int)s.charAt(j)) + ", ");
+			out.println("0");
 			i++;
 		}
 	}
@@ -85,6 +85,7 @@ public class X86Generator extends Generator {
 	}
 
 	private void generateIns(Ins ins, Frame frame) {
+		out.println("; " + ins);
 		if (jumpLabels.containsKey(ins.getLineNo()))
 			out.print(jumpLabels.get(ins.getLineNo()) + ":");
 		else
@@ -295,7 +296,7 @@ public class X86Generator extends Generator {
 			if (offset < 0)
 				return "[ebp-" + (-offset) + "]";
 			else
-				return "[esp+" + offset + "]";
+				return "[ebp+" + offset + "]";
 		}
 	}
 
