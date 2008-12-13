@@ -39,6 +39,13 @@ void *_getchar() {
 	}
 }
 
+// function geti(): int
+int _geti() {
+	int n;
+	scanf("%d", &n);
+	return n;
+}
+
 // ord(s: string): int
 int _ord(void *s) {
 	int len = *(int*)s;
