@@ -1,0 +1,15 @@
+let
+  var N := 10
+  type intArray = array of int
+  var a := intArray [N] of 0
+in (
+  a[0] := 1;
+  a[1] := 1;
+  for i := 2 to N-1 do
+    a[i] := a[i-1] + a[i-2];
+  for i := 1 to N-1 do (
+    printi(a[i]);
+    print("\n")
+  )
+)
+end
