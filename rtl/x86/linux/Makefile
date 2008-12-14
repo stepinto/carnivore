@@ -1,5 +1,5 @@
 all:
-	gcc runtime.c -c -O2
+	gcc runtime.c -c 
 	ar cqs runtime.a runtime.o
 
 clean:
