@@ -56,6 +56,7 @@ public class Translator {
 				ibuf.writeAssignIns(userVarName(leftVar), tempVar);
 			else {
 				String staticLink = userVarName(frame.getStaticLink());
+				frame = frame.getParent();
 				while (frame != null && !frame.contains(leftVar)) {
 					String tmp = newTempVar(frame);
 					int offset = frame.getOffset(frame.getStaticLink());
@@ -202,6 +203,7 @@ public class Translator {
 		else {
 			String staticLink = userVarName(frame.getStaticLink());
 			String ret = newTempVar(frame);
+			frame = frame.getParent();
 			while (frame != null && !frame.contains(var)) {
 				String tmp = newTempVar(frame);
 				ibuf.writeMemReadIns(tmp, staticLink,
@@ -244,7 +246,7 @@ public class Translator {
 		// 3: t1 = t0 * elem_size
 		// 4: result[t1] := init_value
 		// 5: t0 := t0 + 1
-		// 6: goto 2
+		// 6: goto 1
 		// 7: nop
 		translateExp(ibuf, exp.getSizeExp(), frame);
 		translateExp(ibuf, exp.getElemInitExp(), frame);
@@ -265,7 +267,7 @@ public class Translator {
 		ibuf.writeArthIns(ArthIns.TIMES, t1, t0, String.valueOf(elemSize));
 		ibuf.writeMemWriteIns(result, t1,initVar);
 		ibuf.writeArthIns(ArthIns.PLUS, t0, t0, "1");
-		ibuf.writeJumpIns(ibuf.getCurrLineNo() - 4);
+		ibuf.writeJumpIns(ibuf.getCurrLineNo() - 5);
 		ibuf.writeNopIns();
 
 		putExpVar(exp, result);
@@ -384,8 +386,19 @@ public class Translator {
 		//
 		// we don't need to check if func == main(), since user
 		// cannot call it.
-		if (!RuntimeFunctions.isRuntimeFunc(func))
-			ibuf.writeParamIns(FRAME_POINTER_NAME);
+		if (!RuntimeFunctions.isRuntimeFunc(func)) {
+			Frame tmpFrame = frame;
+			String tmpVar = newTempVar(frame);
+			ibuf.writeAssignIns(tmpVar, FRAME_POINTER_NAME);
+			
+			while (func.getFrame().getParent() != tmpFrame) {
+				Variable staticLink = tmpFrame.getStaticLink();
+				int staticLinkOffset = tmpFrame.getOffset(staticLink);
+				ibuf.writeMemReadIns(tmpVar, tmpVar, String.valueOf(staticLinkOffset));
+				tmpFrame = tmpFrame.getParent();
+			}
+			ibuf.writeParamIns(tmpVar);
+		}
 
 		if (func.getRetType() == null)  // is a procedure?
 			ibuf.writeCallIns(userFuncName(func));
