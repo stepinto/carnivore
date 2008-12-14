@@ -1,0 +1,12 @@
+let
+  var n: int := geti()
+  var s: int := 0
+in
+  (
+    for i := 1 to n do
+      s := s + i;
+    printi(s);
+    print("\n")
+  )
+end
+

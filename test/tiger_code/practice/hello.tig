@@ -1,0 +1,6 @@
+let
+  var str:string := "hello\n"
+in
+  print(str)
+end
+
