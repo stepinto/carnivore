@@ -246,7 +246,8 @@ public class X86Generator extends Generator {
 	private void generateRetIns(RetIns ins, Frame frame) {
 		if (ins.getVar() != null)
 			out.println("\tmov\teax, " + getOperand(ins.getVar(), frame));
-		out.println("\tadd\tesp, " + (localStackSize + IntelArch.INT_SIZE));
+		out.println("\tadd\tesp, " + localStackSize);
+		out.println("\tpop\tebp");
 		out.println("\tret");
 	}
 
