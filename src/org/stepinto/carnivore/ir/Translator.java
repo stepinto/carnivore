@@ -56,16 +56,16 @@ public class Translator {
 				ibuf.writeAssignIns(userVarName(leftVar), tempVar);
 			else {
 				String staticLink = userVarName(frame.getStaticLink());
-				frame = frame.getParent();
-				while (frame != null && !frame.contains(leftVar)) {
+				Frame tmpFrame = frame.getParent();
+				while (tmpFrame != null && !tmpFrame.contains(leftVar)) {
 					String tmp = newTempVar(frame);
-					int offset = frame.getOffset(frame.getStaticLink());
+					int offset = tmpFrame.getOffset(tmpFrame.getStaticLink());
 					ibuf.writeMemReadIns(tmp, staticLink, String.valueOf(offset));
 					staticLink = tmp;
-					frame = frame.getParent();
+					tmpFrame = tmpFrame.getParent();
 				}
 
-				ibuf.writeMemWriteIns(staticLink, String.valueOf(frame.getOffset(leftVar)), tempVar);
+				ibuf.writeMemWriteIns(staticLink, String.valueOf(tmpFrame.getOffset(leftVar)), tempVar);
 			}
 		}	
 		else if (leftExp instanceof ArrayAccessExp) {
@@ -183,8 +183,17 @@ public class Translator {
 			if (exp.getOp() == OpExp.GE) relOp = JumpIfIns.GE;
 
 			// TODO: call strcmp() if the two variables are string
+			if (getExpType(leftExp) instanceof StringType) {
+				assert(getExpType(rightExp) instanceof StringType);
 
-			ibuf.writeJumpIfIns(relOp, leftVar, rightVar, ibuf.getCurrLineNo()+3);
+				String tmp = newTempVar(frame);
+				ibuf.writeParamIns(rightVar);
+				ibuf.writeParamIns(leftVar);
+				ibuf.writeCallIns(tmp, "_strcmp");
+				ibuf.writeJumpIfIns(relOp, tmp, "0", ibuf.getCurrLineNo()+3);
+			}
+			else 
+				ibuf.writeJumpIfIns(relOp, leftVar, rightVar, ibuf.getCurrLineNo()+3);
 			ibuf.writeAssignIns(result, "0");
 			ibuf.writeJumpIns(ibuf.getCurrLineNo() + 2);
 			ibuf.writeAssignIns(result, "1");
@@ -203,16 +212,18 @@ public class Translator {
 		else {
 			String staticLink = userVarName(frame.getStaticLink());
 			String ret = newTempVar(frame);
-			frame = frame.getParent();
-			while (frame != null && !frame.contains(var)) {
+			Frame tmpFrame = frame;
+
+			tmpFrame = frame.getParent();
+			while (tmpFrame != null && !tmpFrame.contains(var)) {
 				String tmp = newTempVar(frame);
 				ibuf.writeMemReadIns(tmp, staticLink,
-						String.valueOf(frame.getOffset(frame.getStaticLink())));
+						String.valueOf(tmpFrame.getOffset(tmpFrame.getStaticLink())));
 				staticLink = tmp;
-				frame = frame.getParent();
+				tmpFrame = tmpFrame.getParent();
 			}
 
-			ibuf.writeMemReadIns(ret, staticLink, String.valueOf(frame.getOffset(var)));
+			ibuf.writeMemReadIns(ret, staticLink, String.valueOf(tmpFrame.getOffset(var)));
 			putExpVar(exp, ret);
 		}
 	}
