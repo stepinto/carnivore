@@ -100,6 +100,29 @@ void _exit(int n) {
 	exit(n);
 }
 
+// function _strcmp(a: string, b: string): int
+int _strcmp(void *s1, void *s2) {
+	int len1 = *(int*)s1;
+	int len2 = *(int*)s2;
+	int i;
+
+	s1 += sizeof(int);
+	s2 += sizeof(int);
+	for (i = 0; i < min(len1, len2); i++) {
+		if (((char*)s1)[i] < ((char*)s2)[i])
+			return -1;
+		else if (((char*)s1)[i] > ((char*)s2)[i])
+			return 1;
+	}
+
+	if (len1 < len2)
+		return -1;
+	else if (len1 > len2)
+		return 1;
+	else
+		return 0;
+}
+
 // helper function
 void *_mkstr(const char *s) {
 	int len = strlen(s);
@@ -112,6 +135,10 @@ void *_mkstr(const char *s) {
 // void *_malloc(int size)
 void *_malloc(int size) {
 	return malloc(size);
+}
+
+int min(int a, int b) {
+	return a < b ? a : b;
 }
 
 

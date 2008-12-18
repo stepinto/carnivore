@@ -31,6 +31,7 @@ public class X86Generator extends Generator {
 	private void generateExternDecls() {
 		out.println("extern\t_malloc");
 		out.println("extern\t_mkstr");
+		out.println("extern\t_strcmp");
 		for (Function func: RuntimeFunctions.getList())
 			out.println("extern\t_" + func.getName());
 		out.println("global\t" + ENTRY_FUNC_LABEL);
@@ -140,6 +141,7 @@ public class X86Generator extends Generator {
 		else if (op == ArthIns.DIVIDE) {
 			out.println("\tmov\teax, " + left);
 			out.println("\tmov\tebx, " + right);
+			out.println("\txor\tedx, edx");
 			out.println("\tidiv\tebx");
 			out.println("\tmov\t" + result + ", eax");
 		}
