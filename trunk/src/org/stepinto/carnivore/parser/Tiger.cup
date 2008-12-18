@@ -61,20 +61,21 @@ start with program;
 
 /* Expression */
 program
-    ::= compexp:c {: parser.syntaxTree = c; :}
-      ; compexps
-    ::= compexps:l SEMICOLON compexp:c {: RESULT = new CompExpList(l.getLineNo(), (CompExpList)l, c); :}
-      | compexp:c {: RESULT = new CompExpList(c.getLineNo(), c); :}
-      ;
+   ::= compexp:c {: parser.syntaxTree = c; :}
+     ;
+compexps
+   ::= compexps:l SEMICOLON compexp:c {: RESULT = new CompExpList(l.getLineNo(), (CompExpList)l, c); :}
+     | compexp:c {: RESULT = new CompExpList(c.getLineNo(), c); :}
+     ;
 compexp
-    ::= letexp:e {: RESULT = e; :}
-      | forexp:e {: RESULT = e; :}
-      | whlexp:e {: RESULT = e; :}
-      | ifexp:e {: RESULT = e; :}
-      | ifelexp:e {: RESULT = e; :}
-      | assexp:e {: RESULT = e; :}
-      | BREAK:br {: RESULT = new BreakExp(brleft); :}
-      ;
+   ::= letexp:e {: RESULT = e; :}
+     | forexp:e {: RESULT = e; :}
+     | whlexp:e {: RESULT = e; :}
+     | ifexp:e {: RESULT = e; :}
+     | ifelexp:e {: RESULT = e; :}
+     | assexp:e {: RESULT = e; :}
+     | BREAK:br {: RESULT = new BreakExp(brleft); :}
+     ;
 assexp
    ::= unaryexp:l ASSIGN simpexp:r {: RESULT = new AssignExp(l.getLineNo(), l, r); :}
      | simpexp:e {: RESULT = e; :}
