@@ -29,11 +29,11 @@ public class X86Generator extends Generator {
 	}
 
 	private void generateExternDecls() {
-		out.println("extern\t_malloc");
-		out.println("extern\t_mkstr");
-		out.println("extern\t_strcmp");
+		out.println("extern\t_rtl_malloc");
+		out.println("extern\t_rtl_mkstr");
+		out.println("extern\t_rtl_strcmp");
 		for (Function func: RuntimeFunctions.getList())
-			out.println("extern\t_" + func.getName());
+			out.println("extern\t" + Translator.RUNTIME_FUNC_PREFIX + func.getName());
 		out.println("global\t" + ENTRY_FUNC_LABEL);
 	}
 
