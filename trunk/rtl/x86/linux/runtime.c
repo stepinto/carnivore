@@ -4,10 +4,10 @@
 #include <string.h>
 
 // forward declaration
-void *_mkstr(const char *);
+void *_rtl_mkstr(const char *);
 
 // function print(s: string)
-void _print(void *s) {
+void _rtl_print(void *s) {
 	int len = *(int*)s;
 	s += sizeof(int);
 	while (len-- > 0) {
@@ -17,37 +17,37 @@ void _print(void *s) {
 }
 
 // function printi(n: int)
-void _printi(int n) {
+void _rtl_printi(int n) {
 	printf("%d", n);
 }
 
 // function flush()
-void _flush() {
+void _rtl_flush() {
 	fflush(stdout);
 }
 
 // function getchar(): string
-void *_getchar() {
+void *_rtl_getchar() {
 	int ch = getc(stdin);
 	char buf[2] = {0};
 
 	if (ch < 0)
-		return _mkstr("");
+		return _rtl_mkstr("");
 	else {
 		buf[0] = (char)ch;
-		return _mkstr(buf);
+		return _rtl_mkstr(buf);
 	}
 }
 
 // function geti(): int
-int _geti() {
+int _rtl_geti() {
 	int n;
 	scanf("%d", &n);
 	return n;
 }
 
 // ord(s: string): int
-int _ord(void *s) {
+int _rtl_ord(void *s) {
 	int len = *(int*)s;
 	s += sizeof(int);
 	if (len < 1)
@@ -57,19 +57,19 @@ int _ord(void *s) {
 }
 
 // chr(n: int): s
-void *_chr(int n) {
+void *_rtl_chr(int n) {
 	char buf[2] = {0};
 	buf[0] = '0' + n;
-	return _mkstr(buf);
+	return _rtl_mkstr(buf);
 }
 
 // size(s: string): int
-int _size(void *s) {
+int _rtl_size(void *s) {
 	return *(int*)s;
 }
 
 // substring(s: string, f: int, n: int): string
-void *_substring(void *s, int f, int n) {
+void *_rtl_substring(void *s, int f, int n) {
 	void *t = malloc(n + sizeof(int));
 	*(int*)t = n;
 	memcpy((char*)t+sizeof(int), (char*)f+f+sizeof(int), n);
@@ -77,7 +77,7 @@ void *_substring(void *s, int f, int n) {
 }
 
 // concat(s1: string, s2: string): string
-void *_concat(void *s1, void *s2) {
+void *_rtl_concat(void *s1, void *s2) {
 	int len1 = *(int*)s1;
 	int len2 = *(int*)s2;
 	int len = len1 + len2;
@@ -91,17 +91,17 @@ void *_concat(void *s1, void *s2) {
 }
 
 // function not(n: int): int
-int _not(int n) {
+int _rtl_not(int n) {
 	return n == 0;
 }
 
 // function exit(n: int)
-void _exit(int n) {
+void _rtl_exit(int n) {
 	exit(n);
 }
 
 // function _strcmp(a: string, b: string): int
-int _strcmp(void *s1, void *s2) {
+int _rtl_strcmp(void *s1, void *s2) {
 	int len1 = *(int*)s1;
 	int len2 = *(int*)s2;
 	int i;
@@ -124,7 +124,7 @@ int _strcmp(void *s1, void *s2) {
 }
 
 // helper function
-void *_mkstr(const char *s) {
+void *_rtl_mkstr(const char *s) {
 	int len = strlen(s);
 	void *t = malloc(len + sizeof(int));
 	*(int*)t = len;
@@ -133,7 +133,7 @@ void *_mkstr(const char *s) {
 }
 
 // void *_malloc(int size)
-void *_malloc(int size) {
+void *_rtl_malloc(int size) {
 	return malloc(size);
 }
 
@@ -146,6 +146,6 @@ int min(int a, int b) {
 int main() {
 	extern void _tig_start();
 	_tig_start();
-	_exit(0);
+	exit(0);
 }
 

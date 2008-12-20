@@ -16,6 +16,7 @@ public class Translator {
 	public static final String TEMP_VAR_PREFIX = "t";
 	public static final String USER_FUNC_PREFIX = "F";
 	public static final String STRING_CONST_PREFIX = "s";
+	public static final String RUNTIME_FUNC_PREFIX = "_rtl_";
 
 	public Translator(/*SyntaxTree syntaxTree,*/ Map<Exp, Type> expTypes, 
 			Map<SyntaxTree, Identifier> declIds, Map<IdExp, Identifier> expIds,
@@ -238,7 +239,7 @@ public class Translator {
 		int strId = getStringId(value);
 		String result = newTempVar(frame);
 		ibuf.writeParamIns(STRING_CONST_PREFIX + strId);
-		ibuf.writeCallIns(result, "_mkstr");
+		ibuf.writeCallIns(result, RUNTIME_FUNC_PREFIX + "mkstr");
 		putExpVar(exp, result);
 	}
 
@@ -271,7 +272,7 @@ public class Translator {
 
 		ibuf.writeArthIns(ArthIns.TIMES, totalSizeVar, String.valueOf(elemSize), sizeVar);
 		ibuf.writeParamIns(totalSizeVar);
-		ibuf.writeCallIns(result, "_malloc");
+		ibuf.writeCallIns(result, RUNTIME_FUNC_PREFIX + "malloc");
 		ibuf.writeAssignIns(t0, "0");
 		ibuf.writeJumpIfIns(JumpIfIns.LT, t0, sizeVar, ibuf.getCurrLineNo() + 2);
 		ibuf.writeJumpIns(ibuf.getCurrLineNo() + 5);
@@ -307,7 +308,7 @@ public class Translator {
 
 		String ret = newTempVar(frame);
 		ibuf.writeParamIns(totalSizeVar);
-		ibuf.writeCallIns(ret, "_malloc");
+		ibuf.writeCallIns(ret, RUNTIME_FUNC_PREFIX + "malloc");
 
 		for (FieldInitExp initExp: exp.getInitExps().getExps()) {
 			translateExp(ibuf, initExp.getExp(), frame);
@@ -373,7 +374,7 @@ public class Translator {
 
 	private String userFuncName(Function func) {
 		if (RuntimeFunctions.isRuntimeFunc(func))
-			return "_" + func.getName();
+			return RUNTIME_FUNC_PREFIX + func.getName();
 		else
 			return USER_FUNC_PREFIX + func.getUid();
 	}
