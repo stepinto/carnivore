@@ -1,4 +1,0 @@
-#!/bin/sh
-
-java -cp ../../src:../../lib/cup.jar org.stepinto.carnivore.Carnivore $1 $2 $3 $4 $5 $6 $7 $8 $9
-
