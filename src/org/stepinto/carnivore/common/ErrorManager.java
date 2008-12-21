@@ -1,11 +1,16 @@
 package org.stepinto.carnivore.common;
 
+import java.io.*;
 import java.util.*;
 
 public class ErrorManager {
 	public void printAll() {
+		printAll(System.err);
+	}
+
+	public void printAll(PrintStream out) {
 		for (ErrorMessage e : errorMsg)
-			System.err.println(e);
+			out.println(e);
 	}
 
 	public void report(int line, String msg) {
