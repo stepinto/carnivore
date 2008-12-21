@@ -54,7 +54,7 @@ done
 
 # build rtl
 echo ">> Building runtime..."
-pushd rtl/x86/linux > /dev/null
+pushd rtl > /dev/null
 make > log
 if [[ $? -gt 0 ]]
 then
