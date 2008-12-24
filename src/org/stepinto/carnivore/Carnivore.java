@@ -134,7 +134,7 @@ public class Carnivore {
 	}
 
 	public static void printHelp(PrintStream out) {
-		out.println("Usage: carnivore SOURCE -o TARGET [-g] [-S] [-O] [--verbose]");
+		out.println("Usage: carnivore SOURCE -o TARGET [-g] [-S] [-O] [--ir] [--verbose]");
 		out.println();
 	}
 
