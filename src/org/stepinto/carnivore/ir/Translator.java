@@ -190,7 +190,7 @@ public class Translator {
 				String tmp = newTempVar(frame);
 				ibuf.writeParamIns(rightVar);
 				ibuf.writeParamIns(leftVar);
-				ibuf.writeCallIns(tmp, "_strcmp");
+				ibuf.writeCallIns(tmp, RUNTIME_FUNC_PREFIX + "strcmp");
 				ibuf.writeJumpIfIns(relOp, tmp, "0", ibuf.getCurrLineNo()+3);
 			}
 			else 
