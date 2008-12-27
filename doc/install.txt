@@ -1,0 +1,51 @@
+To compile carnivore, you need to have the following software or runtimes installed:
+  - jdk
+  - gnu c
+  - apache ant
+  - gnu make
+  - nasm
+  - ctags (optional)
+  - gdb (optional)
+
+Both cygwin and linux are supported in current version of carnivore. Here is a hint in how to build and run the basic samples. Open a shell terminal, untar the carnivore source package and cd to the newly created dir. Run:
+
+$ ./build.sh
+
+Correct output might be like:
+
+>> Building parser...
+>> Building scanner...
+>> Compiling source files...
+>> Building runtime...
+>> Updating tags...
+
+If no errors occures, piles of java classes should be compiled as well as the runitme libraries. Binary java bytes code are placed under src/ and libraries are in rtl/x86/cygiwn/ or rtl/x86/linux/. You can simply run ./carnivore, a shell script that automatically start carnivore with your default JRE, to see whether you have compiled the source code correctly. Set the "executation" property to ./carnivore using chmod if neccessary.
+
+All tiger programs compiled by carnivore need to link against the proper runtime library. The compiler looks for the library in current directory. So one thing before you compile tiger sources is to create a symbolic link to a runtime library, which is usually placed in rtl/<arch>/<os>. For cygwin users, you have to copy the runtime library into your current directory since windows os does not support symbolic links as we expect.
+
+After that, you might a .a file called runtime.a in your current directory. Run the following command to compile the eight-queens program, which is located in test/tiger_code/practice/.
+
+$ ./carnivore test/tiger_code/practice/queens.tig -o queens
+
+Now we have queens compiled. Run it and we got the output like this if all things are done correctly:
+
+ O . . . . . . .
+ . . . . O . . .
+ . . . . . . . O
+ . . . . . O . .
+ . . O . . . . .
+ . . . . . . O .
+ . O . . . . . .
+ . . . O . . . .
+
+<more solutions obmitted here>
+
+Carnivore also support compiling source code into assembly code or intermediate code. This is done with "-S" and "--ir" switches. The folloiwng exmpale shows how to compile source into assembly and then compile and link it using nasm and gcc.
+
+$ ./carnivore test/tiger_code/practice/pi.tig -o pi.asm -S
+$ nasm -f elf pi.asm  # (or in cygwin: $ nasm -f win32 pi.asm)
+$ gcc pi.o runtime.a -o pi
+
+Then we get a executable file called pi (or pi.exe in cygwin).
+
+
