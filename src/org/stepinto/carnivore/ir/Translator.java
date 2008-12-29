@@ -481,9 +481,26 @@ public class Translator {
 		ibuf.writeNopIns();
 	}
 
+	private boolean isRelExp(OpExp exp) {
+		switch (exp.getOp()) {
+			case OpExp.LT:
+			case OpExp.LE:
+			case OpExp.EQ:
+			case OpExp.NEQ:
+			case OpExp.GT:
+			case OpExp.GE:
+				return true;
+			default:
+				return false;
+		}
+	}
+
 	private void translateIfExp(InsBuffer ibuf, IfExp exp, Frame frame) {
+		//     if t0 > 0 then goto L1
+		//     ---- or ----
 		//     t0 := exp
 		//     if t0 = 0 then goto L1
+		//     ------------
 		//     <then-body>
 		//     jump L2
 		// L1: <else-body>
@@ -492,8 +509,44 @@ public class Translator {
 		String l1 = newLabel();
 		String l2 = newLabel();
 		String ret = newTempVar(frame);
-		translateExp(ibuf, condiExp, frame);
-		ibuf.writeFakeJumpIfIns(JumpIfIns.EQ, getExpVar(condiExp), "0", l1);
+
+		if (condiExp instanceof OpExp && isRelExp((OpExp)condiExp)) {
+			int op = -1;
+			OpExp opCondiExp = (OpExp)condiExp;
+			Exp leftExp = opCondiExp.getLeft();
+			Exp rightExp = opCondiExp.getRight();
+
+			switch (opCondiExp.getOp()) {
+				case OpExp.LT:
+					op = JumpIfIns.GE;
+					break;
+				case OpExp.LE:
+					op = JumpIfIns.GT;
+					break;
+				case OpExp.GT:
+					op = JumpIfIns.LE;
+					break;
+				case OpExp.GE:
+					op = JumpIfIns.LT;
+					break;
+				case OpExp.EQ:
+					op = JumpIfIns.NEQ;
+					break;
+				case OpExp.NEQ:
+					op = JumpIfIns.EQ;
+					break;
+				default:
+					assert(false);
+					break;
+			}
+			translateExp(ibuf, leftExp, frame);
+			translateExp(ibuf, rightExp, frame);
+			ibuf.writeFakeJumpIfIns(op, getExpVar(leftExp), getExpVar(rightExp), l1);
+		}
+		else {
+			translateExp(ibuf, condiExp, frame);
+			ibuf.writeFakeJumpIfIns(JumpIfIns.EQ, getExpVar(condiExp), "0", l1);
+		}
 
 		Exp thenBody = exp.getThenBody();
 		translateExp(ibuf, thenBody, frame);
