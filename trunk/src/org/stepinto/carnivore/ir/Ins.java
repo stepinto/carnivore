@@ -6,6 +6,10 @@ public class Ins {
 	}
 
 	public int getLineNo() { return lineNo; }
+
+	// called by InsBuffer.writeIns()
+	void setLineNo(int lineNo) { this.lineNo = lineNo; }
+
 	private int lineNo;
 }
 

@@ -69,6 +69,11 @@ public class InsBuffer {
 		ins.add(new RetIns(getCurrLineNo(), var));
 	}
 
+	public void writeIns(Ins i) {
+		i.setLineNo(getCurrLineNo());
+		ins.add(i);
+	}
+
 	public void patchFakeJump(String label, int target) {
 		ListIterator<Ins> iter = ins.listIterator();
 		while (iter.hasNext()) {
