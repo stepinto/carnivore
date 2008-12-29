@@ -8,10 +8,17 @@ import org.stepinto.carnivore.common.*;
 import org.stepinto.carnivore.ir.*;
 import org.stepinto.carnivore.parser.*;
 import org.stepinto.carnivore.sematics.*;
+import org.stepinto.carnivore.optimize.*;
 
 public class Carnivore {
 	public Carnivore(Config config) {
 		this.config = config;
+	}
+
+	private List<Optimizer> getOptimizers() {
+		List<Optimizer> list = new ArrayList<Optimizer>();
+		list.add(new NopEraser());
+		return list;
 	}
 	
 	public void compile(PrintStream out) throws CompileException {
@@ -49,6 +56,19 @@ public class Carnivore {
 						tc.getEntryFunc(), arch);
 		printlnVerbosed(out, "Translating...");
 		tl.translate();
+
+		// optimize
+		if (config.isOptimized()) {
+			printlnVerbosed(out, "Optimizing...");
+			for (Optimizer opt : getOptimizers()) {
+				printlnVerbosed(out, "\tRunning " + opt.getClass().getSimpleName() + "...");
+				for (Map.Entry<Function, InsBuffer> funcIns : tl.getFuncIns().entrySet()) {
+					InsBuffer oldIbuf = funcIns.getValue();
+					InsBuffer newIbuf = opt.optimize(oldIbuf);
+					funcIns.setValue(newIbuf);
+				}
+			}
+		}
 		if (config.getTargetCode() == Config.TC_IR) {
 			try {
 				tl.dumpCode(new PrintStream(config.getTarget()));
@@ -58,7 +78,6 @@ public class Carnivore {
 			return;
 		}
 
-		// TODO: optimize
 
 		// generate asm-code
 		File asmFile;
@@ -100,6 +119,8 @@ public class Carnivore {
 		} catch (AssemblerException ex) {
 			throw new CompileException("Unexpected failure during assembling.");
 		}
+		if (config.getTargetCode() == Config.TC_OBJ)
+			return;
 
 		// run linker to link .o files into a executable
 		assert(config.getTargetCode() == Config.TC_EXE);
@@ -134,7 +155,7 @@ public class Carnivore {
 	}
 
 	public static void printHelp(PrintStream out) {
-		out.println("Usage: carnivore SOURCE -o TARGET [-g] [-S] [-O] [--ir] [--verbose]");
+		out.println("Usage: carnivore SOURCE -o TARGET [-g] [-S] [-O] [--ir] [-c] [--verbose]");
 		out.println();
 	}
 

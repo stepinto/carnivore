@@ -30,7 +30,7 @@ public class Config {
 				debug = true;
 			else if (arg.equals("--verbose"))
 				verbose = true;
-			else if (arg.equals("--optimize") || args.equals("-O"))
+			else if (arg.equals("--optimize") || arg.equals("-O"))
 				optimized = true;
 			else if (arg.equals("--amd64"))
 				targetCPU = TCPU_AMD64;
@@ -69,6 +69,7 @@ public class Config {
 		out.println("Target:\t" + target.getPath());
 		out.println("Debug:\t" + (debug ? "Yes" : "No"));
 		out.println("Verbose:\t" + (verbose ? "Yes" : "No"));
+		out.println("Optimize:\t" + (optimized ? "Yes" : "No"));
 		out.println("Target-CPU:\t" + getTargetCPUName());
 		out.println("Target-Code:\t" + getTargetCodeName());
 	}
@@ -92,7 +93,7 @@ public class Config {
 		else if (targetCode == TC_OBJ)
 			return "Object";
 		else if (targetCode == TC_IR)
-			return "Intermediate Representation";
+			return "IR";
 		else {
 			assert(false);
 			return "";

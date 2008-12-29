@@ -1,14 +1,13 @@
-./gen.sh $1 > a.asm
 if [ $TERM = "cygwin" ]
 then
-	BIN_TYPE="win32"
-	OS="cygwin"
+	CLASS_PATH="../../src;../../lib/cup.jar" 
+	LIB="../../rtl/x86/cygwin/runtime.a"
 else
-	BIN_TYPE="elf"
-	OS="linux"
+	CLASS_PATH="../../src:../../lib/cup.jar"
+	LIB="../../rtl/x86/linux/runtime.a"
 fi
 
-nasm -f $BIN_TYPE a.asm -o a.o
-cc a.o ../../rtl/x86/$OS/runtime.a -o $2
-rm -f a.asm a.o
+java -cp $CLASS_PATH org.stepinto.carnivore.Carnivore $1 -O -o tmp.o -c 
+cc tmp.o $LIB -o $2
+rm -rf tmp.o
 
