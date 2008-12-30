@@ -16,9 +16,10 @@ public class Analyzer {
 		List<Ins> leaders = findLeaders();
 		for (Ins leader : leaders) {
 			Block block = findBlockAt(leader, leaders);
+			assert(block != null);
 			blocks.add(block);
 
-			for (Ins ins : block.getIns())
+			for (Ins ins : block.getIns()) 
 				insBlock.put(ins, block);
 		}
 
@@ -27,9 +28,10 @@ public class Analyzer {
 			for (Ins ins : block.getIns()) {
 				if (ins instanceof JumpIfIns || ins instanceof JumpIns) {
 					int target = (ins instanceof JumpIns ? ((JumpIns)ins).getTarget() : ((JumpIfIns)ins).getTarget());
-					Ins targetIns = ibuf.getIns().get(target);
+					Ins targetIns = ibuf.getIns(target);
 					Block targetBlock = insBlock.get(target);
-					targetBlock.getExits().add(new BlockExit(ins, targetIns));
+					if (targetBlock != null)  // targetBlock == null => unreached ins
+						targetBlock.getExits().add(new BlockExit(ins, targetIns));
 				}
 			}
 		}
@@ -66,23 +68,23 @@ public class Analyzer {
 		
 		if (!ibuf.getIns().isEmpty()) {
 			// the first ins is leader of course
-			leaders.add(ibuf.getIns().get(0));
+			leaders.add(ibuf.getIns(0));
 
 			// all ins after absolutely gotos are leaders
-			Ins prevIns = null;
+			/*Ins prevIns = null;
 			for (Ins ins : ibuf.getIns()) {
 				if (prevIns != null) {
 					if (prevIns instanceof JumpIfIns || prevIns instanceof JumpIns)
 						leaders.add(ins);
 				}
 				prevIns = ins;
-			}
+			}*/
 
 			// all target ins of gotos are leaders
 			for (Ins ins : ibuf.getIns()) {
 				if (ins instanceof JumpIfIns || ins instanceof JumpIns) {
 					int target = (ins instanceof JumpIns ? ((JumpIns)ins).getTarget() : ((JumpIfIns)ins).getTarget());
-					Ins targetIns = ibuf.getIns().get(target);
+					Ins targetIns = ibuf.getIns(target);
 					leaders.add(targetIns);
 				}
 			}
