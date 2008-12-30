@@ -29,6 +29,9 @@ public class Variable extends Identifier {
 	// not cannot be determined at the first sight of that variable
 	void setEscape(boolean escape) { this.escape = escape; }
 
+	// this method may be called by TypeChecker
+	void setFrame(Frame frame) { this.frame = frame; }
+
 	private Type type;
 	private Exp initExp;
 	private boolean escape;
