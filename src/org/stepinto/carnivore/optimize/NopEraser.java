@@ -21,7 +21,7 @@ public class NopEraser extends Optimizer {
 		}
 
 		// find the new line-no of each key lines
-		int newLineNo = 1;  // start from 1
+		int newLineNo = 0;  
 		for (Ins ins : ibuf.getIns()) {
 			int oldLineNo = ins.getLineNo();
 			if (lineMap.containsKey(oldLineNo))

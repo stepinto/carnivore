@@ -103,11 +103,16 @@ public class InsBuffer {
 	}
 
 	public int getCurrLineNo() {
-		return ins.size() + 1;
+		return ins.size();
 	}
 
 	public List<Ins> getIns() {
 		return ins;
+	}
+
+	public Ins getIns(int index) {
+		assert(0 <= index && index < ins.size());
+		return ins.get(index);
 	}
 
 	private List<Ins> ins = new ArrayList<Ins>();
