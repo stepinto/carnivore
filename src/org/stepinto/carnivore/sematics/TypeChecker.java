@@ -59,6 +59,15 @@ public class TypeChecker {
 			// check whether left and right have same type
 			verifySameType(exp.getLineNo(), leftType, rightType);
 			putExpType(exp, NoType.getInstance());
+
+			// detect for var escape
+			if (left instanceof IdExp) {
+				String name = ((IdExp)left).getId();
+				Variable var = getVar(name);
+				assert(var != null);
+				if (getCurrFrame() != var.getFrame())
+					var.setEscape(true);
+			}
 		}
 		else
 			error(exp.getLineNo(), "Expect lvalue.");
@@ -548,7 +557,7 @@ public class TypeChecker {
 
 		// put it in the symbol-table and exp-id table
 		Variable staticLink = new Variable("@static_link", IntType.getInstance(),
-				null, false, getCurrFrame());
+				null, true /* escape */, getCurrFrame());
 		Frame frame = arch.newFrame(getCurrFrame(), staticLink);
 		Function func = new Function(name, args, retType, body, frame);
 		putVarOrFunc(func);
@@ -568,6 +577,7 @@ public class TypeChecker {
 			for (Variable arg : func.getArgs()) {
 				putVarOrFunc(arg);
 				putParamVarToFrame(arg);
+				arg.setFrame(getCurrFrame());
 			}
 			checkExp(body);
 		}

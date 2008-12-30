@@ -669,11 +669,11 @@ public class Translator {
 
 			// print arg-list
 			if (frame.getStaticLink() != null)
-				out.println("arg: " + userVarName(frame.getStaticLink()) + "  (static-link)");
+				out.println("arg: " + userVarName(frame.getStaticLink()) + "  (static-link, escaped)");
 			for (Variable var: frame.getParams())
-				out.println("arg: " + userVarName(var) + "  (alias: " + var.getName() + ")");
+				out.println("arg: " + userVarName(var) + "  (alias: " + var.getName() + (var.isEscape()?", escaped":"") + ")");
 			for (Variable var: frame.getLocals())
-				out.println("var: " + userVarName(var) + "  (alias: " + var.getName() + ")");
+				out.println("var: " + userVarName(var) + "  (alias: " + var.getName() + (var.isEscape()?", escaped":"") + ")");
 
 			ibuf.dump(out);
 		}
@@ -681,7 +681,7 @@ public class Translator {
 
 	private String newTempVar(Frame frame) {
 		String name = TEMP_VAR_PREFIX + (++maxTempVarId);
-		Variable var = new Variable(name, IntType.getInstance(), null, true, frame);
+		Variable var = new Variable(name, IntType.getInstance(), null, false, frame);
 		frame.addLocal(var);
 		return userVarName(var);
 	}
