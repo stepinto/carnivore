@@ -42,6 +42,9 @@ public class Carnivore {
 		} catch (Exception ex) {
 			throw newCompileException(errMgr);
 		}
+		if (errMgr.hasErrors()) {
+			throw newCompileException(errMgr);
+		}
 
 		// type-check
 		Arch arch = IntelArch.getInstance();
@@ -146,6 +149,7 @@ public class Carnivore {
 	public CompileException newCompileException(ErrorManager errMgr) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		PrintStream out = new PrintStream(baos);
+		errMgr.printAll(out);
 		return new CompileException(baos.toString());
 	}
 

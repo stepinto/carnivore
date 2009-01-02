@@ -16,6 +16,11 @@ parser code {:
 	public Exp getSyntaxTree() {
 		return syntaxTree; 
 	}
+
+	// we override this function to adapt our error manager
+	public void syntax_error(Symbol token) {
+		errorMgr.report(token.left, "Unexpected token.");
+	}
 :}
 
 action code {:
@@ -75,6 +80,7 @@ compexp
      | ifelexp:e {: RESULT = e; :}
      | assexp:e {: RESULT = e; :}
      | BREAK:br {: RESULT = new BreakExp(brleft); :}
+     | error {: :}
      ;
 assexp
    ::= unaryexp:l ASSIGN simpexp:r {: RESULT = new AssignExp(l.getLineNo(), l, r); :}

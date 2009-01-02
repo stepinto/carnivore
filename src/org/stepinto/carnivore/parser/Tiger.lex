@@ -23,11 +23,11 @@ import org.stepinto.carnivore.common.*;
 	}
 
 	private Symbol tok(int kind, Object value) {
-		return new Symbol(kind, yyline, yychar, value);
+		return new Symbol(kind, yyline+1, yychar+1, value);
 	}
 	
 	private Symbol tok(int kind) { 
-		return new Symbol(kind, yyline, yychar);
+		return new Symbol(kind, yyline+1, yychar+1);
 	}
 
 	// skip anything until a double quote occured or eof
@@ -129,6 +129,10 @@ import org.stepinto.carnivore.common.*;
 		catch (IOException ex) {
 			error("Access denied.");
 		}
+	}
+
+	public int getCurrLineNo() {
+		return yyline + 1;
 	}
 
 	private ErrorManager errorMgr;

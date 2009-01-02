@@ -33,7 +33,7 @@ public class DumpSyntaxTree {
 		//	System.out.println(prefix + "й╕йд" + className);
 		//else
 		//	System.out.println(prefix + "й└йд" + className);
-		System.out.println(prefix + "+---" + className);
+		System.out.println(prefix + "+---" + className + ": " + curr.getLineNo());
 		
 		ArrayList<SyntaxTree> children = new ArrayList<SyntaxTree>();
 		for (Field f : fs) {
