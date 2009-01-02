@@ -1,7 +1,6 @@
 To compile carnivore, you need to have the following software or runtimes installed:
   - jdk
   - gnu c
-  - apache ant
   - gnu make
   - nasm
   - ctags (optional)
